@@ -1,8 +1,27 @@
-<html>
-  <head>
-    <title>Face expression recognition</title>
-  </head>
-  <body>
-    <img id="bg" width=1200px height=900px src="{{ url_for('video_feed') }}">
-  </body>
-</html>
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block app_content %}
+    <div class="form-group-lg" align="center">
+                {% if form %}
+                    <div class="row" align="center">
+                        <h2>Reconocimiento Automático de Expresiones Faciales</h2>
+                        <hr>
+                        <p>Dada una imagen con el rostro de una o más personas, el modelo clasifica la expresión facial<br>
+                        en una de las 7 categorías básicas universales</p>
+                    </div>
+                    <p></p>
+                    {{ wtf.quick_form(form) }}
+                {% endif %}
+     </div>
+
+    {% if file_url %}
+    <div class="row" align="center">
+        <h3>Resultado:</h3>
+        <img src="{{file_url}}" class="img-fluid img-thumbnail" width="500">
+    </div>
+    <div align="center">
+        <p><br><a class="btn btn-primary" href="{{ url_for('home') }}" role="button">Regresar</a></p>
+    </div>
+    {% endif %}
+{% endblock %}

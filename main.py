@@ -1,24 +1,61 @@
 from flask import Flask, render_template, Response
-from camera import VideoCamera
-
+from flask_bootstrap import Bootstrap
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+from wtforms import SubmitField
+from werkzeug.utils import secure_filename
+from flask import Flask, render_template
+import os
+import cv2
+import numpy as np
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+bootstrap = Bootstrap(app)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+facec = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+font = cv2.FONT_HERSHEY_SIMPLEX
 
-def gen(camera):
-    while True:
-        frame = camera.get_frame()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+from model import FacialExpressionModel
+modelFER = FacialExpressionModel("models/new_fer_best_model.h5")
 
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen(VideoCamera()),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+class UploadForm(FlaskForm):
+    upload = FileField('Seleccionar una imagen:', validators=[
+        FileRequired(),
+        FileAllowed(['jpg', 'png', 'jpeg', 'JPEG', 'PNG', 'JPG'], 'Images only!')
+    ])
+    submit = SubmitField('Clasificar')
 
-if __name__ == '__main__':
-    #app.run(host='0.0.0.0', debug=True)
-    app.run()
+
+def get_prediction(img_path):
+    img_FER = cv2.imread(img_path)
+    img_gray_FER = cv2.cvtColor(img_FER, cv2.COLOR_BGR2GRAY)
+    faces = facec.detectMultiScale(img_gray_FER, 1.3, 5)
+    for (x, y, w, h) in faces:
+        fc = img_gray_FER[y:y+h, x:x+w]
+        roi = cv2.resize(fc, (48, 48))
+        pred = modelFER.predict_emotion(roi[np.newaxis, :, :, np.newaxis])
+        cv2.putText(img_FER, pred, (x, y), font, 1, (255, 255, 0), 2)
+        cv2.rectangle(img_FER,(x,y),(x+w,y+h),(255,0,0),2)
+
+    cv2.imwrite('static/result.jpg', img_FER)
+    return pred
+
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    form = UploadForm()
+    if form.validate_on_submit():
+        f = form.upload.data
+        filename = secure_filename(f.filename)
+        file_url = os.path.join('static', filename)
+        f.save(file_url)
+        form = None
+        prediction = get_prediction(file_url)
+        file_url = 'static/result.jpg'
+    else:
+        file_url = None
+        prediction = None
+    return render_template("index.html", form=form, file_url=file_url, prediction=prediction)
+
+if __name__ == "__main__":
+    app.run(debug=True)
