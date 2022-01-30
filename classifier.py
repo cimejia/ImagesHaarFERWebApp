@@ -17,7 +17,7 @@ bootstrap = Bootstrap(app)
 facec = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 font = cv2.FONT_HERSHEY_SIMPLEX
 
-modelFER = FacialExpressionModel("models/new_fer_best_model.h5")
+modelFER = FacialExpressionModel('models/new_fer_best_model.h5')
 
 class UploadForm(FlaskForm):
     upload = FileField('Seleccionar una imagen:', validators=[
