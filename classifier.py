@@ -1,8 +1,8 @@
-from flask import Flask, render_template, Response
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import SubmitField
+import os
 from werkzeug.utils import secure_filename
 from flask import Flask, render_template
 import os
