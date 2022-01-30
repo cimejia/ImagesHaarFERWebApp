@@ -8,6 +8,7 @@ from flask import Flask, render_template
 import os
 import cv2
 import numpy as np
+from model import FacialExpressionModel
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
@@ -16,7 +17,6 @@ bootstrap = Bootstrap(app)
 facec = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 font = cv2.FONT_HERSHEY_SIMPLEX
 
-from model import FacialExpressionModel
 modelFER = FacialExpressionModel("models/new_fer_best_model.h5")
 
 class UploadForm(FlaskForm):
